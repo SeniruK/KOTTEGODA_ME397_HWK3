@@ -94,7 +94,7 @@ status = opt.solve(model)
 
 # write model outputs to a JSON file
 model.solutions.store_to(status)
-status.write(filename='RHODES_HWK3_OPT_OUTPUTS.json', format='json')
+status.write(filename='KOTTEGODA_HWK3_OPT_OUTPUTS.json', format='json')
 
 # pyomo solve RHODES_HWK_3_OPT.py --solver=glpk
 # pyomo solve RHODES_HWK_3_OPT.py --solver=gurobi
