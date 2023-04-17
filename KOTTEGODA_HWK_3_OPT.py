@@ -46,3 +46,55 @@ model.ESS_c             = Var(model.t, domain = NonNegativeReals)
 model.ESS_d             = Var(model.t, domain = NonNegativeReals)
 model.curt              = Var(model.t, domain = NonNegativeReals)
 
+# define objective function and contraints
+
+# objective 
+def obj_expression(model):
+    return sum(model.cap[i] * model.costs[i] for i in model.tech) + sum(model.ESS_d[t] * ESS_p_var_cost + model.curt[t] * curtailment_cost for t in model.t) 
+model.OBJ = Objective(rule=obj_expression)
+
+# supply/demand match constraint
+def match_const(model, i):
+    return model.solar[i]*model.cap['s_cap'] + model.wind[i]*model.cap['w_cap'] + model.ESS_d[i] - model.ESS_c[i] - model.curt[i] - model.demand[i] == 0   
+model.match = Constraint(model.t, rule = match_const)
+
+# ESS charge/discharge constraint
+def ESS_charge_disc_const(model, i):
+    return model.ESS_c[i] + model.ESS_d[i] <= model.cap['ESS_power_cap']   
+model.ESS_charge_disc_rate = Constraint(model.t, rule = ESS_charge_disc_const)
+
+# ESS max constraint
+def ESS_max_const(model, i):
+    return model.ESS_SOC[i] <= model.cap['ESS_energy_cap']   
+model.ESS_max = Constraint(model.t, rule = ESS_max_const) 
+
+# ESS min constraint
+def ESS_min_const(model, i):
+    return model.ESS_SOC[i] >= ESS_min_level * model.cap['ESS_energy_cap']   
+model.ESS_min = Constraint(model.t, rule = ESS_min_const)      
+
+# SOC constraint
+def SOC_const(model, i):
+    if i == model.t.first(): 
+        return model.ESS_SOC[i] == model.ESS_SOC[model.t.last()] + (model.ESS_c[i] * ESS_eta_c) - (model.ESS_d[i]/ESS_eta_d) 
+    return model.ESS_SOC[i] == model.ESS_SOC[i-1] + (model.ESS_c[i] * ESS_eta_c) - (model.ESS_d[i]/ESS_eta_d) 
+model.SOC_const = Constraint(model.t, rule = SOC_const)
+
+
+# create instance of the model (abstract only)
+model = model.create_instance(data)
+
+# look at model attributes
+# model.t.pprint()
+
+# solve the model
+# opt = SolverFactory('glpk')
+opt = SolverFactory('gurobi')
+status = opt.solve(model) 
+
+# write model outputs to a JSON file
+model.solutions.store_to(status)
+status.write(filename='RHODES_HWK3_OPT_OUTPUTS.json', format='json')
+
+# pyomo solve RHODES_HWK_3_OPT.py --solver=glpk
+# pyomo solve RHODES_HWK_3_OPT.py --solver=gurobi
