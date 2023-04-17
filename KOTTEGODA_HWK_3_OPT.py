@@ -35,7 +35,7 @@ model.costs             = Param(model.tech, initialize={'s_cap' : solar_cap_cost
 
 ## load data into parameters, solar and wind data are houlry capacity factor data
 data = DataPortal()
-data.load(filename = 'opt_model_data/2022_ERCOT_data.csv', select = ('t', 'solar', 'wind', 'demand'), param = [model.solar, model.wind, model.demands], index = model.t)
+data.load(filename = 'opt_model_data/2022_ERCOT_data.csv', select = ('t', 'solar', 'wind', 'demand'), param = [model.solar, model.wind, model.demand], index = model.t)
 # data.load(filename = 'opt_model_data/2022_ERCOT_data.csv', select = ('t', 'wind'), param = model.wind, index = model.t)
 # data.load(filename = 'opt_model_data/2022_ERCOT_data.csv', select = ('t', 'demand'), param = model.demand, index = model.t)
 
@@ -88,8 +88,8 @@ model = model.create_instance(data)
 # model.t.pprint()
 
 # solve the model
-# opt = SolverFactory('glpk')
-opt = SolverFactory('gurobi')
+opt = SolverFactory('glpk')
+# opt = SolverFactory('gurobi')
 status = opt.solve(model) 
 
 # write model outputs to a JSON file
